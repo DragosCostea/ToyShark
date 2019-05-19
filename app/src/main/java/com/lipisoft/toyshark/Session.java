@@ -112,7 +112,7 @@ public class Session {
 	private SelectionKey selectionkey = null;
 	
 	public long connectionStartTime = 0;
-	
+
 	Session(int sourceIp, int sourcePort, int destinationIp, int destinationPort){
 		receivingStream = new ByteArrayOutputStream();
 		sendingStream = new ByteArrayOutputStream();
@@ -120,6 +120,7 @@ public class Session {
 		this.sourcePort = sourcePort;
 		this.destIp = destinationIp;
 		this.destPort = destinationPort;
+
 	}
 
 	/*

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ToyShark</string>
+    <string name="app_name">Established connections</string>
     <string name="tcp">TCP</string>
     <string name="udp">UDP</string>
     <string name="quit">Quit</string>

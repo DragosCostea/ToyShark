@@ -71,6 +71,11 @@ class SessionHandler {
 			return;
 		}
 
+		if (udpheader.getDestinationPort() == 53 || udpheader.getSourcePort() == 53) {
+			Log.i(TAG, "Found a DNS Packet");
+			Log.i(TAG, "Dns payload:" + clientPacketData.toString());
+		}
+
 		session.setLastIpHeader(ipHeader);
 		session.setLastUdpHeader(udpheader);
 		int len = SessionManager.INSTANCE.addClientData(clientPacketData, session);
@@ -86,6 +91,11 @@ class SessionHandler {
 		int destinationIP = ipHeader.getDestinationIP();
 		int sourcePort = tcpheader.getSourcePort();
 		int destinationPort = tcpheader.getDestinationPort();
+
+		if (tcpheader.getDestinationPort() == 53 || tcpheader.getSourcePort() == 53) {
+			Log.i(TAG, "Found a DNS Packet");
+			Log.i(TAG, "Dns payload:" + clientPacketData.toString());
+		}
 
 		if(tcpheader.isSYN()) {
 			//3-way handshake + create new session
@@ -181,6 +191,7 @@ class SessionHandler {
 		final IPv4Header ipHeader = IPPacketFactory.createIPv4Header(stream);
 
 		final ITransportHeader transportHeader;
+		//Log.i(TAG, "Protocol: " + ipHeader.getProtocol());
 		if(ipHeader.getProtocol() == 6) {
 			transportHeader = TCPPacketFactory.createTCPHeader(stream);
 		} else if(ipHeader.getProtocol() == 17) {

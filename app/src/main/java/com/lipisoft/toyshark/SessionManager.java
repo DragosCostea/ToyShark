@@ -16,6 +16,9 @@
 
 package com.lipisoft.toyshark;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -36,7 +39,10 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.AbstractSelectableChannel;
+import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -48,10 +54,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public enum SessionManager {
 	INSTANCE;
 
+	public static final int SESSION = 1;
 	private final String TAG = "SessionManager";
 	private final Map<String, Session> table = new ConcurrentHashMap<>();
+	@NonNull private final List<Session> sessionList = new ArrayList<>();
 	private SocketProtector protector = SocketProtector.getInstance();
 	private Selector selector;
+	private ConnectionListAdapter adapter;
 
 	SessionManager() {
 		try {
@@ -61,8 +70,52 @@ public enum SessionManager {
 		}
 	}
 
+
+	@NonNull private final Handler handler = new Handler(Looper.getMainLooper()) {
+		@Override
+		public void handleMessage(Message msg) {
+			Log.i(TAG, "New message to update session adapter");
+			if (msg != null) {
+				if (msg.what == SessionManager.SESSION) {
+					adapter.notifyDataSetChanged();
+				}
+			}
+			super.handleMessage(msg);
+		}
+	};
+
 	public Selector getSelector(){
 		return selector;
+	}
+
+	public Map<String, Session> getTable() { return table; }
+
+	public boolean add(@NonNull final Session session) {
+		// should check here for duplicates or ensure that sessions are also removed
+		// todo
+		// weird that session does not differentiate between TCP and UDP
+		// note that we only check for destination as there can be multiple processes
+		// which can access the same server, so that is why we do not check
+		// for equality between session and identical on the source port and IP
+		for (Session identical: sessionList) {
+			if (session.getDestIp() == identical.getDestIp() &&
+					session.getDestPort() == identical.getDestPort()) {
+				return true;
+			}
+		}
+		return sessionList.add(session);
+	}
+
+	@NonNull public List<Session> getList() {
+		return sessionList;
+	}
+
+	public void setAdapter(@NonNull ConnectionListAdapter adapter) {
+		this.adapter = adapter;
+	}
+
+	@NonNull public Handler getHandler() {
+		return handler;
 	}
 
 	/**
@@ -190,6 +243,8 @@ public enum SessionManager {
 			return table.get(keys);
 
 		Session session = new Session(srcIp, srcPort, ip, port);
+		SessionManager.INSTANCE.add(session);
+		SessionManager.INSTANCE.getHandler().obtainMessage(SessionManager.SESSION).sendToTarget();
 
 		DatagramChannel channel;
 
@@ -265,6 +320,8 @@ public enum SessionManager {
 		}
 
 		Session session = new Session(srcIp, srcPort, ip, port);
+		SessionManager.INSTANCE.add(session);
+		SessionManager.INSTANCE.getHandler().obtainMessage(SessionManager.SESSION).sendToTarget();
 
 		SocketChannel channel;
 		try {

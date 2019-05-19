@@ -44,6 +44,9 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.Locale;
 
+import weka.classifiers.trees.J48;
+import weka.core.Instance;
+
 public class ToySharkVPNService extends VpnService implements Handler.Callback,
 		Runnable, IProtectSocket, IReceivePacket{
 	private static final String TAG = "ToySharkVPNService";
@@ -388,6 +391,12 @@ public class ToySharkVPNService extends VpnService implements Handler.Callback,
 		}
 	}
 
+	public static String byteArrayToHex(byte[] a) {
+		StringBuilder sb = new StringBuilder(a.length * 2);
+		for(byte b: a)
+			sb.append(String.format("%02x ", b));
+		return sb.toString();
+	}
 	/**
 	 * start background thread to handle client's socket, handle incoming and outgoing packet from VPN interface
 	 * @throws IOException
@@ -427,8 +436,12 @@ public class ToySharkVPNService extends VpnService implements Handler.Callback,
 			//read packet from vpn client
 			data = packet.array();
 			length = clientReader.read(data);
+
+            long startTime = System.currentTimeMillis();
 			if (length > 0) {
-				//Log.d(TAG, "received packet from vpn client: "+length);
+				Log.i(TAG, "received packet from vpn client: "+length);
+				Log.i(TAG, "payload: " + byteArrayToHex(data) );
+				Log.i(TAG, "protocol:" + data[9]);
 				try {
 					packet.limit(length);
 
@@ -445,7 +458,13 @@ public class ToySharkVPNService extends VpnService implements Handler.Callback,
 					Log.d(TAG,"Failed to sleep: "+ e.getMessage());
 				}
 			}
-		}
+            long difference = System.currentTimeMillis() - startTime;
+
+
+			// Instance inst;
+
+            //Log.i(TAG, "Time to 4.1.1service packet: " + difference);
+        }
 		Log.i(TAG, "capture finished: serviceValid = "+serviceValid);
 	}
 

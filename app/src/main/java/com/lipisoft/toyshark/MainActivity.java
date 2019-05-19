@@ -36,6 +36,8 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
 import java.net.NetworkInterface;
+import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -55,6 +57,19 @@ public class MainActivity extends AppCompatActivity {
 		final PacketListAdapter adapter = new PacketListAdapter(PacketManager.INSTANCE.getList());
 		PacketManager.INSTANCE.setAdapter(adapter);
 		recyclerView.setAdapter(adapter);
+
+		final RecyclerView recyclerViewConnections;
+		recyclerViewConnections = findViewById(R.id.connections_recycler_view);
+		recyclerViewConnections.setHasFixedSize(true);
+		recyclerViewConnections.setLayoutManager(new LinearLayoutManager(this));
+
+		// create a deep copy I believe of an empty list, seems useless
+
+		final ConnectionListAdapter adapterConnections = new ConnectionListAdapter(SessionManager.INSTANCE.getList());
+		SessionManager.INSTANCE.setAdapter(adapterConnections);
+		recyclerViewConnections.setAdapter(adapterConnections);
+
+
 
 		checkRuntimePermission();
 	}
